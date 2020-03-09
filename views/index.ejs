@@ -1,0 +1,89 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <title>Intro to WebRTC</title>
+  <meta name="description" content="intro to webrtc">
+  <link rel="stylesheet" type="text/css" href="styles.css">
+
+</head>
+
+<body>
+  <div>
+    Video: <select id="camera"></select>
+  </div>
+  <div>
+    Audio: <select id="audio"></select>
+  </div>
+  <video autoplay></video>
+  <script>
+    
+    var videoArea = document.querySelector("video");
+    var videoSelect = document.querySelector("#camera");
+    var audioSelect = document.querySelector("#audio");
+
+    videoSelect.onchange = startStream;
+    getCameras();
+    startStream();
+
+    
+    function getCameras() {
+      navigator.mediaDevices.enumerateDevices()
+        .then(function (devices) {
+            devices.forEach(function (device) {
+                var option = document.createElement('option');
+                option.value = device.deviceId;
+                if (device.kind === 'videoinput') {
+                    option.text = device.label || 'camera' + (videoSelect.length + 1);
+                    videoSelect.appendChild(option);
+                } else if (device.kind == 'audioinput') {
+                    option.text = device.label || 'mic' + (audioSelect.length + 1);
+                    audioSelect.appendChild(option);
+                }
+            });
+        })
+        .catch(function (err) {
+            console.log(err.name + ": " + err.message);
+        });
+    }
+
+    function startStream() {
+      navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+      var videoSource = videoSelect.value;
+      var constraints = {
+        audio: true,
+        video: {
+          mandatory: {
+            maxWidth: 500,
+            maxHeight: 500,
+          },
+          optional: [{
+            sourceId: videoSource
+          }]
+        },
+
+      };
+      navigator.getUserMedia(constraints, onSuccess, onError);
+
+    }
+
+    
+    function onSuccess(stream) {
+      console.log("success we are streaming now");
+      console.log('window', window.URL);
+      // videoArea.src = window.URL.createObjectURL(stream);
+      videoArea.srcObject = stream;
+      videoArea.className = "grayscale_filter";
+      videoArea.play();
+    }
+
+    function onError(error) {
+      console.log("Error on getting usermedia: ", error);
+    }
+
+
+  </script>
+</body>
+</html>
